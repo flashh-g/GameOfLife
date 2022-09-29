@@ -6,10 +6,10 @@ const PRESSED_BUTTON: Color = Color::rgb(0.4, 1.0, 1.0);
 
 impl Plugin for MainMenuPlugin {
     fn build(&self, app: &mut App) {
-        app
-            .add_event::<GameExitEvent>()
+        app.add_event::<GameExitEvent>()
             .add_event::<SimulationStartEvent>()
             .add_event::<SimulationStopEvent>()
+            .add_event::<ResetEvent>()
             .add_startup_system(setup)
             .add_system(button_system);
     }
@@ -21,6 +21,8 @@ pub struct SimulationStartEvent;
 
 pub struct SimulationStopEvent;
 
+pub struct ResetEvent;
+
 #[derive(Component)]
 struct ClassicButton(ButtonType);
 
@@ -28,17 +30,18 @@ struct ClassicButton(ButtonType);
 enum ButtonType {
     Start,
     Stop,
-    Exit,
+    Reset,
 }
 
 pub struct MainMenuPlugin;
 
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     // ui camera
-    commands.spawn_bundle(UiCameraBundle::default());
+    //commands.spawn_bundle(Camera2dBundle::default());
 
     commands
-        .spawn_bundle(NodeBundle { // root
+        .spawn_bundle(NodeBundle {
+            // root
             style: Style {
                 size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
                 justify_content: JustifyContent::SpaceBetween,
@@ -52,14 +55,14 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                 .spawn_bundle(NodeBundle {
                     style: Style {
                         size: Size::new(Val::Percent(100.0), Val::Px(100.0)),
-                        border: Rect::all(Val::Px(5.0)),
+                        border: UiRect::all(Val::Px(5.0)),
                         ..Default::default()
                     },
                     color: Color::rgb(0.1, 0.1, 0.1).into(),
                     ..Default::default()
                 })
                 .with_children(|parent| {
-                    parent // bottom button BG fill 
+                    parent // bottom button BG fill
                         .spawn_bundle(NodeBundle {
                             style: Style {
                                 size: Size::new(Val::Percent(100.0), Val::Percent(100.0)),
@@ -87,9 +90,9 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                             parent // QUIT BUTTON
                                 .spawn_bundle(build_classic_button(&asset_server))
                                 .with_children(|parent| {
-                                    parent.spawn_bundle(build_classic_text("QUIT", &asset_server));
+                                    parent.spawn_bundle(build_classic_text("Reset", &asset_server));
                                 })
-                                .insert(ClassicButton(ButtonType::Exit));
+                                .insert(ClassicButton(ButtonType::Reset));
                         });
                 });
         });
@@ -99,7 +102,7 @@ fn build_classic_button(asset_server: &Res<AssetServer>) -> ButtonBundle {
     ButtonBundle {
         style: Style {
             size: Size::new(Val::Px(150.0), Val::Px(50.0)),
-            margin: Rect::all(Val::Auto),
+            margin: UiRect::all(Val::Auto),
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
             ..Default::default()
@@ -112,14 +115,13 @@ fn build_classic_button(asset_server: &Res<AssetServer>) -> ButtonBundle {
 
 fn build_classic_text(value: &str, asset_server: &Res<AssetServer>) -> TextBundle {
     TextBundle {
-        text: Text::with_section(
+        text: Text::from_section(
             value,
             TextStyle {
                 font: asset_server.load("fonts/Symtext.ttf"),
                 font_size: 30.0,
                 color: Color::rgb(0.9, 0.9, 0.9),
             },
-            Default::default()
         ),
         ..Default::default()
     }
@@ -128,10 +130,11 @@ fn build_classic_text(value: &str, asset_server: &Res<AssetServer>) -> TextBundl
 fn button_system(
     mut interaction_query: Query<
         (&Interaction, &mut UiColor, &ClassicButton),
-        (Changed<Interaction>, With<Button>)>,
+        (Changed<Interaction>, With<Button>),
+    >,
     mut start_writer: EventWriter<SimulationStartEvent>,
     mut stop_writer: EventWriter<SimulationStopEvent>,
-    mut exit_writer: EventWriter<GameExitEvent>,
+    mut reset_writer: EventWriter<ResetEvent>,
 ) {
     for (interaction, mut color, classic_button) in interaction_query.iter_mut() {
         match *interaction {
@@ -140,12 +143,12 @@ fn button_system(
                 match classic_button.0 {
                     ButtonType::Start => {
                         start_writer.send(SimulationStartEvent);
-                    },
+                    }
                     ButtonType::Stop => {
                         stop_writer.send(SimulationStopEvent);
-                    },
-                    ButtonType::Exit => {
-                        exit_writer.send(GameExitEvent);
+                    }
+                    ButtonType::Reset => {
+                        reset_writer.send(ResetEvent);
                     }
                 }
             }

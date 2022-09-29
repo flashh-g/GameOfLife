@@ -1,19 +1,20 @@
-use ui::*;
+use bevy::prelude::*;
 use input::*;
 use simulation::*;
-use bevy::prelude::*;
+use ui::*;
 
-mod ui;
-mod simulation;
 mod input;
+mod simulation;
+mod ui;
 
-const GRID_SIZE: i32 = 100;
+const GRID_SIZE: i32 = 140;
 
 fn main() {
     App::new()
         .insert_resource(WindowDescriptor {
             width: 1024f32,
             height: 720f32,
+            resizable: false,
             title: "Game Of Life".to_string(),
             ..Default::default()
         })

@@ -13,4 +13,4 @@
 - WASD to move camera around
 - Q key to zoom out
 - E key to zoom in
-- Escape key to quite program 
+- Escape key to quit program 

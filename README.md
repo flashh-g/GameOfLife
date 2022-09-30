@@ -1,5 +1,7 @@
 # Game of life
 
+![](game_of_life_screenshot.jpg)
+
 ## Install Guide
 
 - `git clone https://github.com/flashh-g/GameOfLife.git` 

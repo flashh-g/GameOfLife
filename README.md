@@ -6,7 +6,7 @@
 
 - `git clone https://github.com/flashh-g/GameOfLife.git` 
 - `cd GameOfLife`
-- `cargo install .`
+- `cargo run --release`
 
 ## Input Guide
 

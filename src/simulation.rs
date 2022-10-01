@@ -55,6 +55,8 @@ enum CellState {
     Alive,
     Dead,
     Empty,
+    Sick,
+    Murdered,
 }
 
 #[derive(Default)]
@@ -62,6 +64,8 @@ pub struct SpriteImages {
     empty_cell: Sprite,
     alive_cell: Sprite,
     dead_cell: Sprite,
+    sick_cell: Sprite,
+    murdered_cell: Sprite,
 }
 
 #[derive(Default)]
@@ -111,6 +115,16 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
         dead_cell: Sprite {
             custom_size: Some(Vec2::splat(16.0)),
             color: Color::BLACK,
+            ..default()
+        },
+        sick_cell: Sprite {
+            custom_size: Some(Vec2::splat(16.0)),
+            color: Color::AQUAMARINE,
+            ..default()
+        },
+        murdered_cell: Sprite {
+            custom_size: Some(Vec2::splat(16.0)),
+            color: Color::PURPLE,
             ..default()
         },
     });
@@ -208,7 +222,7 @@ fn simulation_step(
         for (cell, _sprite) in cells.iter_mut() {
             life_grid.push(match cell.alive {
                 CellState::Alive => true,
-                CellState::Dead | CellState::Empty => false,
+                CellState::Murdered | CellState::Sick | CellState::Dead | CellState::Empty => false,
             });
         }
 
@@ -236,10 +250,22 @@ fn simulation_step(
             if neighbour_cnt < 2 || neighbour_cnt > 3 {
                 match cell.alive {
                     CellState::Alive => {
+                        cell.alive = CellState::Sick;
+                        *sprite = sprite_images.sick_cell.clone();
+                    }
+                    CellState::Sick => {
+                        cell.alive = CellState::Murdered;
+                        *sprite = sprite_images.murdered_cell.clone();
+                    }
+                    CellState::Murdered => {
                         cell.alive = CellState::Dead;
                         *sprite = sprite_images.dead_cell.clone();
                     }
-                    CellState::Dead | CellState::Empty => {}
+                    CellState::Dead => {
+                        cell.alive = CellState::Empty;
+                        *sprite = sprite_images.empty_cell.clone();
+                    }
+                    _ => {}
                 }
             }
 
